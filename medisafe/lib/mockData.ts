@@ -1,0 +1,125 @@
+import { User, Prescription, Reminder } from './types';
+
+export const mockUser: User = {
+  id: '1',
+  name: 'John Doe',
+  email: 'john@example.com',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+  dateOfBirth: '1990-05-15',
+  phone: '+1 (555) 123-4567',
+};
+
+export const mockPrescriptions: Prescription[] = [
+  {
+    id: '1',
+    userId: '1',
+    doctorName: 'Dr. Sarah Mitchell',
+    hospitalName: 'City Medical Center',
+    date: '2024-04-15',
+    medicines: [
+      {
+        name: 'Lisinopril',
+        dosage: '10mg',
+        frequency: 'Once daily',
+        duration: '30 days',
+        instructions: 'Take in the morning with or without food',
+        warnings: ['May cause dizziness', 'Avoid excessive salt intake'],
+        interactions: ['NSAIDs', 'Potassium supplements'],
+      },
+      {
+        name: 'Metformin',
+        dosage: '500mg',
+        frequency: 'Twice daily',
+        duration: '90 days',
+        instructions: 'Take with meals to minimize stomach upset',
+        warnings: ['Risk of lactic acidosis', 'Monitor kidney function'],
+        interactions: ['Contrast dye', 'Certain diuretics'],
+      },
+    ],
+    notes: 'Follow-up in 4 weeks. Monitor blood pressure.',
+    riskLevel: 'moderate',
+    imageUrl: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde0e?w=400',
+  },
+  {
+    id: '2',
+    userId: '1',
+    doctorName: 'Dr. James Anderson',
+    hospitalName: 'Metro Health Hospital',
+    date: '2024-03-20',
+    medicines: [
+      {
+        name: 'Amoxicillin',
+        dosage: '500mg',
+        frequency: 'Three times daily',
+        duration: '7 days',
+        instructions: 'Complete the full course even if feeling better',
+        warnings: ['Allergic reaction risk', 'May cause diarrhea'],
+        interactions: ['Methotrexate', 'Oral contraceptives'],
+      },
+    ],
+    notes: 'For bacterial infection. No need for follow-up.',
+    riskLevel: 'low',
+  },
+  {
+    id: '3',
+    userId: '1',
+    doctorName: 'Dr. Emily Chen',
+    hospitalName: 'Wellness Clinic',
+    date: '2024-02-10',
+    medicines: [
+      {
+        name: 'Atorvastatin',
+        dosage: '20mg',
+        frequency: 'Once daily',
+        duration: 'Ongoing',
+        instructions: 'Take in the evening. Do not skip doses.',
+        warnings: ['Risk of muscle pain', 'Avoid grapefruit juice'],
+        interactions: ['Erythromycin', 'Clarithromycin'],
+      },
+      {
+        name: 'Aspirin',
+        dosage: '81mg',
+        frequency: 'Once daily',
+        duration: 'Ongoing',
+        instructions: 'Take with food or water',
+        warnings: ['Bleeding risk', 'GI upset'],
+        interactions: ['Ibuprofen', 'Warfarin'],
+      },
+    ],
+    notes: 'Preventive therapy. Continue indefinitely.',
+    riskLevel: 'low',
+  },
+];
+
+export const mockReminders: Reminder[] = [
+  {
+    id: '1',
+    userId: '1',
+    medicineId: '1',
+    medicineName: 'Lisinopril',
+    time: '08:00',
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    enabled: true,
+    createdAt: '2024-04-15',
+  },
+  {
+    id: '2',
+    userId: '1',
+    medicineId: '2',
+    medicineName: 'Metformin',
+    time: '08:00',
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    enabled: true,
+    createdAt: '2024-04-15',
+  },
+  {
+    id: '3',
+    userId: '1',
+    medicineId: '3',
+    medicineName: 'Metformin',
+    time: '20:00',
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    enabled: true,
+    createdAt: '2024-04-15',
+  },
+];
