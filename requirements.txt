@@ -1,0 +1,11 @@
+# requirements.txt
+google-generativeai>=0.3.0
+python-dotenv>=1.0.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+opencv-python>=4.8.0
+pdf2image>=1.16.0
+firebase-admin>=6.4.0
+datetime
+json
+typing
