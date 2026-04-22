@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prescription Analyst</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ca69d;
+            --primary-dark: #088a82;
+            --secondary: #1a73e8;
+            --background: #f4f7f9;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --safe: #10b981;
+            --safe-bg: #d1fae5;
+            --caution: #f59e0b;
+            --caution-bg: #fef3c7;
+            --risk: #ef4444;
+            --risk-bg: #fee2e2;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* typography */
+        h1, h2, h3, h4 { color: var(--text-main); font-weight: 600; }
+        p { color: var(--text-muted); }
+
+        /* Header */
+        header {
+            background: var(--gradient);
+            padding: 2rem 5%;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        header h1 {
+            color: white;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: white;
+            color: var(--primary-dark);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background-color: #f8fafc;
+        }
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1557b0 100%);
+            color: white;
+        }
+
+        /* Layout Main */
+        main {
+            padding: 2rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover { align-items: center; transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Prescriptions List */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .prescription-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .prescription-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .card-title { font-size: 1.25rem; margin-bottom: 0.25rem; }
+        .card-date { font-size: 0.85rem; }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.safe { background-color: var(--safe-bg); color: var(--safe); }
+        .badge.caution { background-color: var(--caution-bg); color: var(--caution); }
+        .badge.risk { background-color: var(--risk-bg); color: var(--risk); }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal.active { display: flex; animation: fadeIn 0.2s ease-in-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 10;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .close-btn:hover { color: var(--text-main); }
+
+        .modal-body { padding: 2rem; }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            background: var(--safe-bg);
+            border-color: var(--safe);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        #file-input { display: none; }
+        
+        .preview-img { max-width: 100%; max-height: 250px; border-radius: var(--radius-md); display: none; margin: 1rem auto; box-shadow: var(--shadow-sm); }
+
+        .loading-overlay {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Details View */
+        .report-section {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .report-section h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .medicines-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .medicine-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+
+        .medicine-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
+        .medicine-details { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .detail-item { background: #f1f5f9; padding: 0.25rem 0.75rem; border-radius: 4px; }
+        .medicine-desc { font-size: 0.9rem; }
+        .reminders { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+        .reminder-tag { font-size: 0.8rem; background: var(--safe-bg); color: var(--safe); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 500;}
+
+        /* Tools (Check Meal / Verify Pill) */
+        .interactive-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+        @media (max-width: 768px) { .interactive-tools { grid-template-columns: 1fr; } }
+        
+        .tool-box { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; }
+        .tool-box input[type="text"], .tool-box input[type="file"] {
+            width: 100%; padding: 0.75rem; margin: 1rem 0; border: 1px solid var(--border); border-radius: 6px;
+        }
+        
+        .result-box { margin-top: 1rem; padding: 1rem; border-radius: 6px; font-size: 0.9rem; display: none; }
+        .result-box.success { background: var(--safe-bg); color: #065f46; border: 1px solid var(--safe); }
+        .result-box.warning { background: var(--caution-bg); color: #92400e; border: 1px solid var(--caution); }
+        .result-box.danger { background: var(--risk-bg); color: #991b1b; border: 1px solid var(--risk); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            AI Prescription Analyst
+        </h1>
+        <button class="btn" onclick="openModal('upload-modal')">Upload New Prescription</button>
+    </header>
+
+    <main>
+        <div class="stats-grid" id="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Processed</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card" style="border-bottom: 4px solid var(--safe)">
+                <div class="stat-label">Safe Interventions</div>
+                <div class="stat-value" id="stat-safe" style="color: var(--safe)">0</div>
+            </div>
+            <div class="stat-card" style="border-bottom: 4px solid var(--caution)">
+                <div class="stat-label">Caution / Reviews</div>
+                <div class="stat-value" id="stat-caution" style="color: var(--caution)">0</div>
+            </div>
+            <div class="stat-card" style="border-bottom: 4px solid var(--risk)">
+                <div class="stat-label">Risks Detected</div>
+                <div class="stat-value" id="stat-risk" style="color: var(--risk)">0</div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h2>Recent Prescriptions</h2>
+            <button class="btn" onclick="fetchPrescriptions()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Refresh</button>
+        </div>
+
+        <div class="list-container" id="prescription-list">
+            <p>Loading prescriptions...</p>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="upload-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Upload Prescription</h2>
+                <button class="close-btn" onclick="closeModal('upload-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📄</div>
+                    <h3>Drag & Drop or Click to Select</h3>
+                    <p>Supports Image files (.jpg, .png)</p>
+                    <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+                </div>
+                <img id="image-preview" class="preview-img" alt="Preview">
+                
+                <div class="loading-overlay" id="upload-loading">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing the prescription...</p>
+                    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Checking interactions, dosage, and safety...</p>
+                </div>
+
+                <div style="text-align: right; margin-top: 1rem;">
+                    <button class="btn btn-primary" id="process-btn" style="display: none;" onclick="processUpload()">Analyze Prescription</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal" id="details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detail-title">Prescription Analysis</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span id="detail-badge" class="badge">Safe</span>
+                    <button class="close-btn" onclick="closeModal('details-modal')">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                
+                <div class="report-section">
+                    <h3>Explanation</h3>
+                    <div id="detail-explanation" style="white-space: pre-line;"></div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Medicines Prescribed</h3>
+                    <div class="medicines-list" id="detail-medicines"></div>
+                </div>
+
+                <div class="report-section" style="background: #fff; border: 1px solid var(--border);">
+                    <h3>Interactions & Safety</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div>
+                            <strong><span style="color: #6366f1;">💊 Drug-Drug Interactions:</span></strong>
+                            <p id="detail-drug-interactions"></p>
+                        </div>
+                        <div>
+                            <strong><span style="color: #f59e0b;">🍔 Food-Drug Interactions:</span></strong>
+                            <p id="detail-food-interactions"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Tools -->
+                <div class="interactive-tools">
+                    <div class="tool-box">
+                        <h4>🍽️ Check Meal Interaction</h4>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Planning a meal? Check if it's safe to eat with these medications.</p>
+                        <input type="text" id="meal-input" placeholder="e.g., Grapefruit juice and toast">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="checkMeal()">Verify Safety</button>
+                        <div id="meal-result" class="result-box"></div>
+                    </div>
+
+                    <div class="tool-box">
+                        <h4>🔍 Verify Pill visually</h4>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Not sure about a pill? Upload a photo to verify it against the prescription.</p>
+                        <input type="text" id="verify-pill-name" placeholder="Expected medicine name">
+                        <input type="file" id="pill-image-input" accept="image/*">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="verifyPill()">Analyze Pill Image</button>
+                        <div id="pill-result" class="result-box"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin; // Assume served correctly if not port mapped. For local testing we might need hardcoded if origins differ, but fastapi is serving this.
+        let currentFile = null;
+        let currentPrescriptionId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDashboard();
+            fetchPrescriptions();
+
+            // Drag and drop events
+            const dropZone = document.getElementById('drop-zone');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFiles(e.dataTransfer.files[0]);
+                }
+            });
+        });
+
+        function fetchDashboard() {
+            fetch('/dashboard')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stat-total').innerText = data.total_prescriptions;
+                    document.getElementById('stat-safe').innerText = data.safe_count;
+                    document.getElementById('stat-caution').innerText = data.caution_count;
+                    document.getElementById('stat-risk').innerText = data.risk_count;
+                }).catch(err => console.error(err));
+        }
+
+        function fetchPrescriptions() {
+            fetch('/prescriptions')
+                .then(r => r.json())
+                .then(data => {
+                    const container = document.getElementById('prescription-list');
+                    container.innerHTML = '';
+                    if (data.length === 0) {
+                        container.innerHTML = '<p>No prescriptions uploaded yet. Click above to upload one.</p>';
+                        return;
+                    }
+                    // Sort descending by id creation implicitly (or date if we had real dates)
+                    data.reverse().forEach(item => {
+                        const score = item.data.safety_score.toLowerCase();
+                        let badgeClass = 'safe';
+                        if (score.includes('caution')) badgeClass = 'caution';
+                        if (score.includes('risk')) badgeClass = 'risk';
+
+                        const card = document.createElement('div');
+                        card.className = 'prescription-card';
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <div>
+                                    <h3 class="card-title">${item.data.title || 'Unknown Treatment'}</h3>
+                                    <p class="card-date">${item.date}</p>
+                                </div>
+                                <span class="badge ${badgeClass}">${item.data.safety_score}</span>
+                            </div>
+                            <p style="flex-grow: 1;">${item.data.explanation.substring(0, 100)}...</p>
+                            <button class="btn btn-primary" style="margin-top: auto;" onclick="openDetails('${item.id}')">View Full Details</button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }).catch(err => console.error(err));
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            if(id === 'upload-modal'){
+                resetUploadState();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function handleFileSelect(event) {
+            if (event.target.files.length > 0) {
+                handleFiles(event.target.files[0]);
+            }
+        }
+
+        function handleFiles(file) {
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('image-preview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                document.getElementById('drop-zone').style.display = 'none';
+                document.getElementById('process-btn').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetUploadState() {
+            currentFile = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('drop-zone').style.display = 'block';
+            document.getElementById('process-btn').style.display = 'none';
+            document.getElementById('upload-loading').style.display = 'none';
+        }
+
+        async function processUpload() {
+            if (!currentFile) return;
+
+            document.getElementById('process-btn').style.display = 'none';
+            document.getElementById('upload-loading').style.display = 'flex';
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Upload failed');
+                }
+
+                const result = await response.json();
+                closeModal('upload-modal');
+                fetchDashboard();
+                fetchPrescriptions();
+                openDetails(result.id);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                document.getElementById('process-btn').style.display = 'inline-block';
+                document.getElementById('upload-loading').style.display = 'none';
+            }
+        }
+
+        async function openDetails(id) {
+            currentPrescriptionId = id;
+            try {
+                const res = await fetch(`/prescription/${id}`);
+                const record = await res.json();
+                const data = record.data;
+
+                document.getElementById('detail-title').innerText = data.title;
+                document.getElementById('detail-explanation').innerText = data.explanation;
+                document.getElementById('detail-drug-interactions').innerText = data.drug_drug_interactions;
+                document.getElementById('detail-food-interactions').innerText = data.food_drug_interactions;
+                
+                const score = data.safety_score.toLowerCase();
+                let badgeClass = 'safe';
+                if (score.includes('caution')) badgeClass = 'caution';
+                if (score.includes('risk')) badgeClass = 'risk';
+                
+                const badge = document.getElementById('detail-badge');
+                badge.className = `badge ${badgeClass}`;
+                badge.innerText = data.safety_score;
+
+                const medList = document.getElementById('detail-medicines');
+                medList.innerHTML = '';
+                data.medicines.forEach(m => {
+                    const reminders = (m.reminders || []).map(r => `<span class="reminder-tag">⏰ ${r}</span>`).join('');
+                    medList.innerHTML += `
+                        <div class="medicine-card">
+                            <div class="medicine-name">${m.name}</div>
+                            <div class="medicine-details">
+                                <span class="detail-item"><strong>Dose:</strong> ${m.dosage}</span>
+                                <span class="detail-item"><strong>Freq:</strong> ${m.frequency}</span>
+                                <span class="detail-item"><strong>Dur:</strong> ${m.duration}</span>
+                            </div>
+                            <div class="medicine-desc">
+                                <p style="margin-bottom: 0.5rem"><strong>Purpose:</strong> ${m.purpose}</p>
+                                <p><strong>Precautions:</strong> ${m.precautions}</p>
+                            </div>
+                            <div class="reminders">
+                                ${reminders}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Clear previous tool inputs
+                document.getElementById('meal-input').value = '';
+                document.getElementById('meal-result').style.display = 'none';
+                document.getElementById('pill-image-input').value = '';
+                document.getElementById('verify-pill-name').value = data.medicines.length > 0 ? data.medicines[0].name : '';
+                document.getElementById('pill-result').style.display = 'none';
+
+                openModal('details-modal');
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load details");
+            }
+        }
+
+        async function checkMeal() {
+            const meal = document.getElementById('meal-input').value;
+            if (!meal) return;
+            const rbox = document.getElementById('meal-result');
+            
+            rbox.style.display = 'block';
+            rbox.className = 'result-box';
+            rbox.innerHTML = '<i>Checking interactions...</i>';
+
+            try {
+                const res = await fetch('/check-meal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prescription_id: currentPrescriptionId, meal_description: meal })
+                });
+                const data = await res.json();
+                
+                let warningsHTML = '';
+                if (data.warnings && data.warnings.length > 0) {
+                    warningsHTML = `<ul style="margin: 0.5rem 0 0.5rem 1.5rem">
+                        ${data.warnings.map(w => `<li>${w}</li>`).join('')}
+                    </ul>`;
+                }
+
+                rbox.className = data.safe_to_eat ? 'result-box success' : 'result-box danger';
+                rbox.innerHTML = `
+                    <strong>${data.safe_to_eat ? '✅ Safe to Eat' : '⚠️ Unsafe/Caution'}</strong>
+                    <p style="margin-top: 0.5rem">${data.explanation}</p>
+                    ${warningsHTML}
+                `;
+            } catch (err) {
+                rbox.innerHTML = 'Error checking meal';
+            }
+        }
+
+        async function verifyPill() {
+            const input = document.getElementById('pill-image-input');
+            const expected = document.getElementById('verify-pill-name').value;
+            if (!input.files.length || !expected) {
+                alert("Please select an image and enter the expected medicine name.");
+                return;
+            }
+
+            const rbox = document.getElementById('pill-result');
+            rbox.style.display = 'block';
+            rbox.className = 'result-box';
+            rbox.innerHTML = '<i>Analyzing pill...</i>';
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('expected_name', expected);
+
+            try {
+                const res = await fetch('/verify-pill', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                let styleClass = 'result-box warning';
+                if (data.match && data.confidence === 'High') styleClass = 'result-box success';
+                else if (!data.match) styleClass = 'result-box danger';
+
+                rbox.className = styleClass;
+                rbox.innerHTML = `
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>${data.match ? '✅ Match Confirmed' : '❌ Mismatch'}</strong> (Confidence: ${data.confidence})
+                    </div>
+                    <p style="margin-bottom: 0.5rem;"><strong>Observations:</strong> ${data.observations}</p>
+                    <p><strong>Conclusion:</strong> ${data.conclusion}</p>
+                `;
+            } catch (err) {
+                rbox.innerHTML = 'Error verifying pill';
+            }
+        }
+
+    </script>
+</body>
+</html>
