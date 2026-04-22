@@ -21,11 +21,12 @@ interface SignupData {
   email: string;
   password: string;
   confirmPassword: string;
+  phone: string;
 }
 
 export function AuthForm({ type, onSubmit, isLoading = false }: AuthFormProps) {
   const [formData, setFormData] = useState<any>(
-    type === 'login' ? { email: '', password: '' } : { name: '', email: '', password: '', confirmPassword: '' }
+    type === 'login' ? { email: '', password: '' } : { name: '', email: '', password: '', confirmPassword: '', phone: '' }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,6 +36,9 @@ export function AuthForm({ type, onSubmit, isLoading = false }: AuthFormProps) {
     if (type === 'signup') {
       if (!formData.name?.trim()) {
         newErrors.name = 'Name is required';
+      }
+      if (!formData.phone?.trim()) {
+        newErrors.phone = 'Phone number is required for SMS alerts';
       }
     }
 
@@ -93,6 +97,23 @@ export function AuthForm({ type, onSubmit, isLoading = false }: AuthFormProps) {
             aria-invalid={!!errors.name}
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+        </div>
+      )}
+
+      {type === 'signup' && (
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            placeholder="+1 (555) 000-0000"
+            value={formData.phone || ''}
+            onChange={handleChange}
+            disabled={isLoading}
+            aria-invalid={!!errors.phone}
+          />
+          {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
         </div>
       )}
 

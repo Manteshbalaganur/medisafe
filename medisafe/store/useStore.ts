@@ -38,6 +38,7 @@ export interface Reminder {
   enabled: boolean;
   time: string;
   frequency: string;
+  photoVerified?: boolean;
 }
 
 export interface ChatMessage {

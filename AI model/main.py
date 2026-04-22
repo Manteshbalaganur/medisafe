@@ -10,6 +10,9 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image
+import asyncio
+import datetime
+from twilio.rest import Client
 
 load_dotenv()
 
@@ -38,6 +41,75 @@ prescriptions_db = {}
 class MealCheckRequest(BaseModel):
     prescription_id: str
     meal_description: str
+
+class ReminderItem(BaseModel):
+    id: str
+    time: str
+    photoVerified: bool = False
+    medicineName: str
+
+class SyncRemindersRequest(BaseModel):
+    user_id: str
+    phone_number: str
+    reminders: List[ReminderItem]
+
+# Global store for active alerts
+active_schedules = {}
+
+@app.post("/sync-reminders")
+async def sync_reminders(req: SyncRemindersRequest):
+    active_schedules[req.user_id] = req
+    return {"success": True}
+
+def send_sms_alert(phone_number: str, medicine_name: str):
+    account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "mock_sid")
+    auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "mock_token")
+    from_number = os.environ.get("TWILIO_FROM_NUMBER", "+15559990000")
+    message_text = "u did taken tablet u forgetten go and take the tablet"
+    
+    print(f"[Twilio] Attempting to send SMS to {phone_number}")
+    try:
+        client = Client(account_sid, auth_token)
+        message = client.messages.create(
+            body=message_text,
+            from_=from_number,
+            to=phone_number
+        )
+        print(f"[Twilio] Alert sent successfully! Message SID: {message.sid}")
+    except Exception as e:
+        print(f"[Twilio Error] Failed to send alert: {str(e)}")
+
+async def sms_cron_job():
+    print("[CRON] Started background SMS notification loop")
+    while True:
+        try:
+            now = datetime.datetime.now()
+            
+            for user_id, schedule_data in active_schedules.items():
+                phone_number = schedule_data.phone_number
+                for reminder in schedule_data.reminders:
+                    if not reminder.photoVerified:
+                        try:
+                            # Parse "HH:MM" (e.g., "08:00")
+                            rem_time = datetime.datetime.strptime(reminder.time, "%H:%M").time()
+                            rem_dt = datetime.datetime.combine(now.date(), rem_time)
+                            time_diff = (now - rem_dt).total_seconds() / 60.0
+                            
+                            # If 15 minutes have passed since the scheduled time
+                            # We use < 16 to avoid sending multiple times
+                            if 15 <= time_diff < 16:
+                                print(f"[CRON] Missed dose detected for {reminder.medicineName}! Sending SMS.")
+                                send_sms_alert(phone_number, reminder.medicineName)
+                        except Exception as e:
+                            pass
+        except Exception as e:
+            print(f"[CRON Error] {e}")
+            
+        await asyncio.sleep(60) # Check every minute
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(sms_cron_job())
 
 def get_gemini_vision_response(image_bytes: bytes, prompt: str) -> str:
     """Helper to call Gemini 3 Flash Preview with an image and prompt"""

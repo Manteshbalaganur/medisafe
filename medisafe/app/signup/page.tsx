@@ -12,7 +12,7 @@ export default function SignupPage() {
 
   const handleSignup = async (data: any) => {
     try {
-      await signup(data.name, data.email, data.password);
+      await signup(data.name, data.email, data.password, data.phone);
       router.push('/dashboard');
     } catch (error) {
       console.error('Signup failed:', error);

@@ -9,7 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
 }
@@ -32,13 +32,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signup = useCallback(async (name: string, email: string, password: string) => {
+  const signup = useCallback(async (name: string, email: string, password: string, phone: string) => {
     setIsLoading(true);
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));
       // Mock successful signup
-      setUser({ ...mockUser, name, email });
+      setUser({ ...mockUser, name, email, phone });
     } finally {
       setIsLoading(false);
     }

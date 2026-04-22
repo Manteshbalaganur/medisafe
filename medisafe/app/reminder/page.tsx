@@ -1,20 +1,53 @@
 'use client';
+import React from 'react';
 
 import { useStore } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, BellOff, Clock, Calendar as CalendarIcon, Info, CheckCircle2, TrendingUp, Sparkles } from 'lucide-react';
+import { Bell, BellOff, Clock, Calendar as CalendarIcon, Info, CheckCircle2, TrendingUp, Sparkles, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ReminderPage() {
-  const { reminders, updateReminder } = useStore();
+  const { reminders, updateReminder, profile } = useStore();
+  const [isSyncing, setIsSyncing] = React.useState(false);
 
   const activeRemindersCount = reminders.filter(r => r.enabled).length;
 
   const toggleReminder = (id: string, currentEnabled: boolean) => {
     updateReminder(id, { enabled: !currentEnabled });
   };
+
+  const takePhoto = (id: string) => {
+    // In a real app, this would open the camera
+    updateReminder(id, { photoVerified: true });
+    alert("Photo successfully verified! Excellent job.");
+  };
+
+  React.useEffect(() => {
+    // Sync to Python backend for SMS alerts cron job
+    const syncBackend = async () => {
+      try {
+        await fetch('http://localhost:8000/sync-reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 'user_123',
+            phone_number: profile?.phone || '+15550000000',
+            reminders: reminders.map(r => ({
+              id: r.id,
+              time: r.time,
+              photoVerified: r.photoVerified || false,
+              medicineName: r.medicineName
+            }))
+          })
+        });
+      } catch (err) {
+        console.error("Backend not running or failed to sync:", err);
+      }
+    };
+    if (reminders.length > 0) syncBackend();
+  }, [reminders, profile?.phone]);
 
   // Sort reminders by time mock (assuming format HH:MM)
   const sortedReminders = [...reminders].sort((a, b) => a.time.localeCompare(b.time));
@@ -72,16 +105,31 @@ export default function ReminderPage() {
                               </span>
                             </div>
                             <h3 className={`font-semibold ${reminder.enabled ? 'text-slate-700' : 'text-slate-500'}`}>{reminder.medicineName}</h3>
+                            <p className="text-xs font-medium text-slate-500 mt-1">
+                              Validation: <span className={reminder.photoVerified ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>{reminder.photoVerified ? "Verified" : "Awaiting Photo"}</span>
+                            </p>
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
-                          <span className="text-sm font-semibold text-slate-400 sm:hidden">Active</span>
-                          <Switch 
-                            checked={reminder.enabled} 
-                            onCheckedChange={() => toggleReminder(reminder.id, reminder.enabled)}
-                            className="data-[state=checked]:bg-teal-500"
-                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className={`gap-2 ${reminder.photoVerified ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-200 text-slate-600 hover:bg-slate-100"}`}
+                            onClick={() => takePhoto(reminder.id)}
+                            disabled={reminder.photoVerified}
+                          >
+                            <Camera className="w-4 h-4" />
+                            {reminder.photoVerified ? "Verified" : "Verify Dose with Photo"}
+                          </Button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-400 sm:hidden">Active</span>
+                            <Switch 
+                              checked={reminder.enabled} 
+                              onCheckedChange={() => toggleReminder(reminder.id, reminder.enabled)}
+                              className="data-[state=checked]:bg-teal-500"
+                            />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -100,7 +148,19 @@ export default function ReminderPage() {
                 <TrendingUp className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-4xl font-bold tracking-tighter text-slate-900">92%</h3>
+                <div className="flex items-center justify-center gap-2">
+                  <h3 className="text-4xl font-bold tracking-tighter text-slate-900">92%</h3>
+                  <div className="flex flex-col gap-1">
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      SMS Alerts: Active
+                    </span>
+                    <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <Camera className="w-3 h-3" />
+                      Verified: 88%
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">Adherence Rate</p>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2 mt-4">
